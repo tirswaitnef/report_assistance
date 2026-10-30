@@ -48,6 +48,7 @@ def main():
     parser.add_argument("--install-only", action="store_true", help="Prepare dependencies without starting the server")
     parser.add_argument("--reinstall", action="store_true", help="Recheck dependencies against the pinned lock file")
     parser.add_argument("--configure-gemini", action="store_true", help="Prompt for a Gemini key/model locally, save settings and start the web app")
+    parser.add_argument("--diagnose-gemini", action="store_true", help="Check model access and make one synthetic Gemini request (may consume quota)")
     args = parser.parse_args()
     if sys.version_info[:2] != (3, 12):
         parser.error("Use Python 3.12: Windows: py -3.12 run.py; macOS/Linux: python3.12 run.py")
@@ -71,6 +72,8 @@ def main():
     if args.install_only:
         print("Installation complete. Run the same command without --install-only to start.")
         return 0
+    if args.diagnose_gemini:
+        return subprocess.run([str(python), str(ROOT / "scripts" / "diagnose_gemini.py")], cwd=ROOT).returncode
     print(f"\nOn this computer, open: http://127.0.0.1:{args.port}", flush=True)
     print("Keep this terminal open. Press Ctrl+C to stop. Select Gemini in the web app after configuration.\n", flush=True)
     return subprocess.run([str(python), "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1",

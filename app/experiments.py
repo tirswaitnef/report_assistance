@@ -99,7 +99,8 @@ class ExperimentManager:
                         "implementation_sha256": {
                             name: hashlib.sha256((PROJECT_ROOT / name).read_bytes()).hexdigest()
                             for name in ["app/engine.py", "app/models.py", "app/knowledge.py", "app/settings.py",
-                                         "app/experiments.py", "app/research.py", "requirements.lock.txt"]},
+                                         "app/experiments.py", "app/research.py", "app/gemini_schema.py",
+                                         "app/gemini_diagnostics.py", "requirements.lock.txt"]},
                         "retrieval": {"algorithm": "BM25", "top_k": 3, "max_chunk_characters": 1800,
                                       "k1": 1.5, "b": 0.75},
                         "owasp_sources": self.kb.sources,
@@ -165,6 +166,7 @@ class ExperimentManager:
                     run.update(status="failed", error_type=type(exc).__name__,
                                error_code=getattr(exc, "code", "generation_failed"),
                                provider_status=getattr(exc, "provider_status", None),
+                               diagnostic=getattr(exc, "diagnostic", None),
                                error=str(exc) if isinstance(exc, GenerationError) else "Generation failed; raw error withheld")
                     state["failed"] += 1
                 run["latency_seconds"] = round(time.perf_counter() - start, 4)

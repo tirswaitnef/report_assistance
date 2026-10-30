@@ -71,7 +71,8 @@ def run():
                 # Do not log provider responses or credentials.
                 row.update(status="failed", error_type=type(exc).__name__,
                            error_code=getattr(exc, "code", "generation_failed"),
-                           provider_status=getattr(exc, "provider_status", None))
+                           provider_status=getattr(exc, "provider_status", None),
+                           diagnostic=getattr(exc, "diagnostic", None))
             row["latency_seconds"] = round(time.perf_counter() - start, 4)
             runs.write(json.dumps(row, ensure_ascii=False) + "\n")
             runs.flush()

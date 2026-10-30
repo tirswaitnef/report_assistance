@@ -10,13 +10,16 @@ from app.knowledge import KnowledgeBase
 from app.models import GeneratedOutput, ReportRequest
 from app.privacy import redact_value
 from app.settings import get_settings
+from app.gemini_schema import gemini_response_schema, SCHEMA_PROFILE
+from app.gemini_diagnostics import gemini_error_hint
 
 
 class GenerationError(ValueError):
-    def __init__(self, message: str, *, code: str = "generation_error", provider_status: int | None = None):
+    def __init__(self, message: str, *, code: str = "generation_error", provider_status: int | None = None, diagnostic: dict | None = None):
         super().__init__(message)
         self.code = code
         self.provider_status = provider_status
+        self.diagnostic = diagnostic
 
 
 SYSTEM_PROMPT = """You draft database security assessment reports for human review.
@@ -169,6 +172,19 @@ def _integer_usage(value: dict, mapping: dict) -> dict:
             if isinstance(value.get(source), int) and not isinstance(value[source], bool) and value[source] >= 0}
 
 
+def provider_response_error(response: httpx.Response, backend: str) -> GenerationError:
+    base = _provider_error(response.status_code, backend)
+    if backend != "gemini":
+        return base
+    hint = gemini_error_hint(response)
+    if hint["kind"] == "invalid_argument":
+        base.diagnostic = hint
+        return base
+    fields = ", ".join(hint["fields"]) or "không xác định"
+    return GenerationError(f"Gemini HTTP {response.status_code} [{hint['kind']}]: {hint['message']} Trường: {fields}. Nội dung gốc được ẩn.",
+                           code=base.code, provider_status=base.provider_status, diagnostic=hint)
+
+
 def call_llm(context: dict) -> GeneratedOutput:
     settings = get_settings()
     if not settings.configured:
@@ -183,7 +199,7 @@ def call_llm(context: dict) -> GeneratedOutput:
             "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
             "contents": [{"role": "user", "parts": [{"text": json.dumps({"context": context}, ensure_ascii=False)}]}],
             "generationConfig": {"temperature": 0, "maxOutputTokens": maximum_tokens,
-                                 "responseMimeType": "application/json", "responseJsonSchema": schema},
+                                 "responseMimeType": "application/json", "responseJsonSchema": gemini_response_schema()},
         }
         headers = {"x-goog-api-key": settings.api_key, "Content-Type": "application/json"}
     else:
@@ -203,7 +219,7 @@ def call_llm(context: dict) -> GeneratedOutput:
         with httpx.Client(timeout=httpx.Timeout(120, connect=15), follow_redirects=False) as client:
             response = client.post(endpoint, json=body, headers=headers)
         if response.status_code != 200:
-            raise _provider_error(response.status_code, settings.backend)
+            raise provider_response_error(response, settings.backend)
         if len(response.content) > 2_000_000:
             raise GenerationError("Phản hồi model vượt giới hạn kích thước; chưa lưu báo cáo.", code="response_too_large")
         payload = response.json()
@@ -213,6 +229,7 @@ def call_llm(context: dict) -> GeneratedOutput:
                     "temperature": 0, "max_output_tokens": maximum_tokens,
                     "request_sha256": _hash_json(body),
                     "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
+                    "schema_profile": SCHEMA_PROFILE if settings.backend == "gemini" else "pydantic-full",
                     "elapsed_seconds": round(time.perf_counter() - started, 4)}
         if settings.backend == "gemini":
             if payload.get("promptFeedback", {}).get("blockReason"):
@@ -292,7 +309,7 @@ def generate_report(request: ReportRequest, kb: KnowledgeBase) -> dict:
               "summary": {"total": len(results), "confirmed": cited_findings,
                           "needs_review": len(results) - cited_findings, "severities": severities},
               "findings": results, "warnings": warnings,
-              "provenance": {"generator_version": "0.2.0", "model": output._generation_metadata.get("model_requested", get_settings().model) if request.provider == "llm" else "deterministic-template-v1",
+              "provenance": {"generator_version": "0.2.1", "model": output._generation_metadata.get("model_requested", get_settings().model) if request.provider == "llm" else "deterministic-template-v1",
                              "llm_backend": output._generation_metadata.get("backend", get_settings().backend) if request.provider == "llm" else None,
                              "generation": output._generation_metadata if request.provider == "llm" else {},
                              "temperature": 0 if request.provider == "llm" else None,

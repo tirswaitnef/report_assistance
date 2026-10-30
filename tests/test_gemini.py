@@ -12,6 +12,7 @@ from app.knowledge import KnowledgeBase
 from app.models import GeneratedOutput, ReportRequest
 from app.settings import DEFAULT_GEMINI_MODEL, get_settings, public_settings
 from tests.test_domain import sample_case
+from app.gemini_schema import gemini_response_schema
 
 
 class SettingsTests(unittest.TestCase):
@@ -117,7 +118,7 @@ class GeminiProviderTests(unittest.TestCase):
         self.assertEqual(request.kwargs["headers"]["x-goog-api-key"], "test-gemini-secret")
         body = request.kwargs["json"]
         self.assertEqual(body["generationConfig"]["responseMimeType"], "application/json")
-        self.assertEqual(body["generationConfig"]["responseJsonSchema"], GeneratedOutput.model_json_schema())
+        self.assertEqual(body["generationConfig"]["responseJsonSchema"], gemini_response_schema())
         self.assertEqual(body["generationConfig"]["temperature"], 0)
         self.assertIn("systemInstruction", body)
         self.assertEqual(result.findings[0].id, "F001")

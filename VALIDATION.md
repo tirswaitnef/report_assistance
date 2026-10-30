@@ -2,6 +2,15 @@
 
 These are **software checks**, not empirical answers to the three research questions.
 
+## HTTP 400 compatibility update (0.2.1)
+
+- **97 tests passed** after this update (mocked Gemini; no live key).
+
+- Google documents a subset for `responseJsonSchema`; the wire schema now omits unsupported `minLength`, `maxLength` and `default` hints while preserving the full Pydantic schema for local validation. Structured JSON output and citation guards remain enabled. Source: [official SDK schema field documentation](https://github.com/googleapis/python-genai/blob/main/google/genai/types.py).
+- Provider errors are classified using known reason codes and canonical field roots; no raw provider error text, unknown field name or evidence is echoed. A generic HTTP400 alone does not establish its cause; this compatibility change does not prove the user's account-specific error was caused by schema constraints.
+- `py -3.12 run.py --diagnose-gemini` checks the configured model's metadata and submits one synthetic structured request. It can consume API quota, never submits imported findings/evidence, and reports only safe diagnostic information.
+- The wire schema profile and revised code hashes are recorded for reproducibility. Do not merge pre/post-update research batches without declaring the configuration change. No live API credential was available for verification in this workspace.
+
 ## Gemini update
 
 - Native Google Gemini REST generation implemented using structured JSON output, server-side key configuration and the fixed Google API endpoint. `run.py --configure-gemini` prompts for a hidden key and model, saves them locally, then starts the web application. The local settings file is excluded from downloadable source archives.

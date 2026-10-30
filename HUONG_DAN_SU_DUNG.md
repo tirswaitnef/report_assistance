@@ -77,6 +77,7 @@ Không tự chuyển sang Template để tiếp tục một lượt nghiên cứ
 | Không tìm thấy `run.py` | Mở Terminal trong thư mục đã giải nén chứa file này. |
 | Không cài được thư viện | Kiểm tra Internet và đọc lỗi; không tắt kiểm tra TLS. |
 | Gemini chưa cấu hình | Dừng server, chạy lại với `--configure-gemini`, rồi tải lại trang. Nếu có biến môi trường rỗng/cũ, sửa cấu hình đó vì biến môi trường ưu tiên hơn file local. |
+| HTTP 400 | Dùng bản mã mới nhất rồi chạy `py -3.12 run.py --diagnose-gemini`. Lệnh đọc cấu hình đã lưu, kiểm tra metadata model và gửi một yêu cầu tổng hợp nhỏ (có thể tính quota). Chỉ thông báo phân loại an toàn được in ra; không gửi key/file cấu hình cho người hỗ trợ. |
 | HTTP 401/403 | Kiểm tra key, project, quyền dùng API và giới hạn key trong tài khoản; không dán key vào ảnh lỗi. |
 | HTTP 404/model không tồn tại | Chọn model còn khả dụng cho tài khoản, chạy lại `--configure-gemini`. |
 | HTTP 429 | Kiểm tra quota/billing và giảm số lượt; chờ theo hạn mức của provider, không lặp gọi liên tục. |
@@ -85,3 +86,7 @@ Không tự chuyển sang Template để tiếp tục một lượt nghiên cứ
 | Đóng Terminal thì web ngừng chạy | Chạy lại launcher và giữ cửa sổ mở. Batch chưa hoàn tất có thể cần chạy lại thành một đợt mới theo protocol. |
 
 Nếu cần hỗ trợ, gửi thông báo lỗi đã che dữ liệu nhạy cảm, không gửi key hay mật khẩu. Tích hợp Gemini đã có trong mã; chưa có key thật trong môi trường phát triển để khẳng định một lượt API thực đã thành công.
+
+Model ID đã đối chiếu trong cookbook chính thức cho Gemini 3.5 Flash-Lite là `gemini-3.5-flash-lite`. Chạy `--configure-gemini` và nhập ID này tại dòng model. Quyền truy cập vẫn phụ thuộc project/API key của bạn.
+
+Khi tải bản cập nhật ZIP, dừng server bằng Ctrl+C, giải nén vào thư mục mới và mở Terminal tại thư mục có `run.py`. Bạn có thể sao chép thư mục `.local` từ bản cũ sang bản mới **trên cùng máy cá nhân** để giữ key và báo cáo, hoặc cấu hình lại bằng `--configure-gemini`. Không upload `.local` lên GitHub hay chia sẻ. Giữ riêng các ZIP dữ liệu nghiên cứu đã xuất; phiên bản schema gửi Gemini thay đổi cần được ghi nhận khi so sánh các đợt chạy.
