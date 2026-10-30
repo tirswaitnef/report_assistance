@@ -1,0 +1,13 @@
+{
+  "title": "PostgreSQL · Cấu hình và phân quyền (dữ liệu tổng hợp)",
+  "database": "PostgreSQL",
+  "findings": [
+    {"id":"F-PG-01","title":"Tài khoản ứng dụng có quyền superuser","category":"excessive_privileges","severity":"high","description":"Người kiểm thử báo cáo role ứng dụng có quyền vượt quá chức năng dự kiến. Chưa chứng minh tác động khai thác.","asset":"lab-postgres/app_role","evidence_ids":["E-PG-01"]},
+    {"id":"F-PG-02","title":"TLS phía server chưa bật","category":"tls_disabled","severity":"medium","description":"Cần kiểm tra chính sách mã hóa đường truyền và cấu hình client, không suy diễn đã có nghe lén.","asset":"lab-postgres","evidence_ids":["E-PG-02"]},
+    {"id":"F-PG-03","title":"Chưa xác minh cấu hình audit","category":"audit_logging","severity":"info","description":"Thiếu log và cấu hình audit; chưa đủ căn cứ kết luận không có logging.","asset":"lab-postgres/audit","evidence_ids":[]}
+  ],
+  "evidence": [
+    {"id":"E-PG-01","source":"Synthetic lab fixture: SELECT rolname, rolsuper FROM pg_roles WHERE rolname='app_role'","content":"rolname | rolsuper\napp_role | t\nObservation is synthetic; not captured from a live database.","collected_at":"synthetic fixture; no collection timestamp"},
+    {"id":"E-PG-02","source":"Synthetic lab fixture: SHOW ssl","content":"ssl\noff\nThis is a server setting only; network exposure and actual session traffic were not measured.","collected_at":"synthetic fixture; no collection timestamp"}
+  ]
+}

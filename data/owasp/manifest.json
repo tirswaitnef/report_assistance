@@ -1,0 +1,41 @@
+{
+  "license": "CC-BY-SA-4.0",
+  "sources": [
+    {
+      "id": "database",
+      "title": "Database Security Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Database_Security_Cheat_Sheet.html",
+      "snapshot_url": "https://raw.githubusercontent.com/OWASP/CheatSheetSeries/920293be317721982fa50324a6f26af3f29dc45e/cheatsheets/Database_Security_Cheat_Sheet.md",
+      "revision": "920293be317721982fa50324a6f26af3f29dc45e",
+      "file": "database.md",
+      "sha256": "b5ad6125f2f908949df3a7866daa03a9f8487e94ea84f384eb852948375f15e2"
+    },
+    {
+      "id": "sql-injection",
+      "title": "SQL Injection Prevention Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+      "snapshot_url": "https://raw.githubusercontent.com/OWASP/CheatSheetSeries/920293be317721982fa50324a6f26af3f29dc45e/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.md",
+      "revision": "920293be317721982fa50324a6f26af3f29dc45e",
+      "file": "sql-injection.md",
+      "sha256": "5597b04e2a6f280e1b33a3a01c1f01884fa04fd9679168e2606fab22b6a6058b"
+    },
+    {
+      "id": "logging",
+      "title": "Logging Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+      "snapshot_url": "https://raw.githubusercontent.com/OWASP/CheatSheetSeries/920293be317721982fa50324a6f26af3f29dc45e/cheatsheets/Logging_Cheat_Sheet.md",
+      "revision": "920293be317721982fa50324a6f26af3f29dc45e",
+      "file": "logging.md",
+      "sha256": "55ed0b4e9b2a68dba0f5a26c817a20760632d91b315aa42bb33ecfe36cc7195d"
+    },
+    {
+      "id": "secrets",
+      "title": "Secrets Management Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html",
+      "snapshot_url": "https://raw.githubusercontent.com/OWASP/CheatSheetSeries/920293be317721982fa50324a6f26af3f29dc45e/cheatsheets/Secrets_Management_Cheat_Sheet.md",
+      "revision": "920293be317721982fa50324a6f26af3f29dc45e",
+      "file": "secrets.md",
+      "sha256": "14e26fc79fedb7d5dcfb5fc7f42efd9e8b2a4975129c11460125b4c38253e4f6"
+    }
+  ]
+}

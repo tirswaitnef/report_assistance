@@ -1,0 +1,11 @@
+{
+  "title":"Bằng chứng thiếu và mâu thuẫn (dữ liệu tổng hợp)",
+  "database":"PostgreSQL",
+  "findings":[
+    {"id":"F-INC-01","title":"Báo cáo TLS tắt nhưng snapshot cho thấy bật","category":"tls_disabled","severity":"medium","description":"Người kiểm thử cho rằng TLS tắt. Bằng chứng hiện có cho thấy cấu hình bật; vẫn cần kiểm tra client và phiên kết nối. Không được khẳng định lỗ hổng chỉ từ nhãn finding.","asset":"lab-postgres","evidence_ids":["E-INC-01"]},
+    {"id":"F-INC-02","title":"Nghi ngờ truy cập CSDL từ Internet","category":"exposed_database","severity":"high","description":"Chưa có kết quả kiểm tra đường mạng, firewall hay địa chỉ bind. Phải abstain về xác nhận exposure.","asset":"lab-postgres/network","evidence_ids":[]}
+  ],
+  "evidence":[
+    {"id":"E-INC-01","source":"Synthetic configuration snapshot","content":"SHOW ssl;\nssl = on\nNo client sslmode, certificate validation, or active-session capture is available.","collected_at":null}
+  ]
+}

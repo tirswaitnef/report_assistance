@@ -1,0 +1,38 @@
+# Implementation validation
+
+These are **software checks**, not empirical answers to the three research questions.
+
+## Gemini update
+
+- Native Google Gemini REST generation implemented using structured JSON output, server-side key configuration and the fixed Google API endpoint. `run.py --configure-gemini` prompts for a hidden key and model, saves them locally, then starts the web application. The local settings file is excluded from downloadable source archives.
+- **79 tests passed** after integration, including native Gemini request/response mocks, provider blocks/quota/timeouts, model/token provenance, experiment failure accounting and ZIP exports, launcher credential privacy, plus the prior reporting tests. Real Gemini API calls have **not** been made: no key is configured in this workspace. Mocks establish software behavior, not service access or model quality.
+- Real Chromium integration against the updated application verified missing-key guidance, template report generation, four-condition experiment progress, refresh recovery by experiment ID, and a valid downloadable ZIP. Gemini-configured UI states were checked with mocked responses. No dummy key was sent to Google.
+- Real web API smoke: 12/12 template runs on one synthetic case (3 repetitions × 4 conditions); archive contains case/manifest/status/runs, report JSON+Markdown and blank expert coding CSV. Verified study IDs and metadata are exported. Source and prompt hashes, OWASP provenance and retrieval parameters are captured. No semantic research scores were generated.
+- The requested model alias defaults to `gemini-flash-latest`, based on the official Google SDK documentation examples. Availability depends on the user's Google project; a fixed supported model ID is recommended for a research batch. Successful generations retain requested and provider-resolved model versions and token counts when returned.
+
+The baseline section below records the earlier prototype validation. Its 44-test count predates this update. Current installation and research instructions are in `HUONG_DAN_SU_DUNG.md` and `docs/GEMINI_RESEARCH_GUIDE.vi.md`.
+
+## Verified in this workspace
+
+- Python 3.12 virtual environment created; dependencies installed with TLS verification from the package registry. `requirements.lock.txt` captures the tested full dependency set; `requirements.txt` records direct dependencies.
+- **44 unittest tests passed** in the isolated virtual environment: 13 API tests, 13 input/privacy/retrieval tests, 18 engine/provider tests. Provider tests use mocks, not a paid model.
+- Local Uvicorn service started and exercised through Chromium. All four grounding/RAG configurations returned HTTP 201, produced reports with the requested flags, and rendered successfully. Structural evaluation, evidence inspection, JSON editing/import, OWASP/research views and Markdown/JSON download were exercised.
+- Browser checked safe text rendering for an HTML-shaped input, invalid-JSON feedback, no JS runtime errors, and no horizontal overflow at widths 390, 680, 900, 1180 and 1440. This is a smoke check, not a formal accessibility audit or penetration test.
+- Offline experiment smoke: **12/12 runs completed**, using three synthetic fixtures × four conditions, one repetition. Findings with no evidence remained review-required; G0 excluded evidence context, R0 excluded OWASP context. Human annotation scores were not filled in.
+- Four official OWASP documents at commit `920293be317721982fa50324a6f26af3f29dc45e`, **137 chunks**, with SHA-256 verification and license preserved. Relevance was sanity-checked for SQLi, least privilege and TLS; there is no gold-labeled retrieval benchmark yet.
+- Research proposal Word document generated and reopened; 243-word abstract. Rendered with LibreOffice successfully as 19 A4 pages. Title-page personal metadata remains blank for the team to complete.
+
+## Environment-specific execution
+
+The default execution sandbox denied network sockets (including loopback binds and the TestClient event-loop socket). Network-dependent package installation, local service startup, browser checks and the unittest run used approved elevated tool execution. No proxy or TLS verification was bypassed. A transient execution transport disconnection was retried after service recovery. These are tooling constraints, not application test failures.
+
+Starlette emits a TestClient deprecation notice about its httpx integration; the tests completed successfully. The prototype does not depend on TestClient for serving requests.
+
+## Not verified / not completed
+
+- No real LLM call: no Gemini credential is configured in this workspace. The live provider branch has mocked boundary/schema/credential-error tests only. Actual account/model access, generation quality, real token usage, pricing and provider-specific authentication remain unverified.
+- No live PostgreSQL/MySQL connection or scan. The application analyzes supplied security findings/evidence. The fixtures are synthetic, not acquired security test results.
+- No held-out study dataset, expert gold labels, completed literature search, expert annotation, confidence intervals or research-effectiveness findings. Dataset sizes and research schedules in the proposal are plans.
+- The experiment runner exports reports and blank annotation forms. Human coding, retrieval relevance judgments, statistical analysis and manuscript results are separate planned stages described in the protocol; they are not automatically inferred from structural API metrics.
+- No production authentication, user-level authorization, encryption-at-rest, deployment hardening or public exposure has been tested. Bind to loopback for internal research.
+- Draft setup instructions may be saved in environment settings; saving is not publication or a validation of restoration in a new task. Source code has not been pushed or published.

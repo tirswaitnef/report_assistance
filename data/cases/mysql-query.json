@@ -1,0 +1,12 @@
+{
+  "title":"MySQL · SQL injection cần xác minh (dữ liệu tổng hợp)",
+  "database":"MySQL",
+  "findings":[
+    {"id":"F-MY-01","title":"Nối chuỗi dữ liệu người dùng vào truy vấn","category":"sql_injection","severity":"high","description":"Mẫu mã nguồn minh họa nối chuỗi đầu vào. Cần truy vết dữ liệu và kiểm thử lab để xác nhận đường khai thác; chưa có kết quả truy cập trái phép.","asset":"lab-service/search","evidence_ids":["E-MY-01"]},
+    {"id":"F-MY-02","title":"Tài khoản ứng dụng dùng quyền rộng","category":"excessive_privileges","severity":"high","description":"Cần đối chiếu quyền với chức năng ứng dụng trước khi chốt mức rủi ro.","asset":"lab-mysql/app_user","evidence_ids":["E-MY-02"]}
+  ],
+  "evidence":[
+    {"id":"E-MY-01","source":"Synthetic code review fixture","content":"query = \"SELECT id, name FROM products WHERE name = '\" + user_input + \"'\"\nNo execution trace or exploit result is provided.","collected_at":null},
+    {"id":"E-MY-02","source":"Synthetic SHOW GRANTS fixture","content":"GRANT ALL PRIVILEGES ON *.* TO 'app_user'@'app-network'\nRole/function requirements are not included in this fixture.","collected_at":null}
+  ]
+}
