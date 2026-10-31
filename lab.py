@@ -16,11 +16,18 @@ PROJECT = "dbreport-lab"
 
 
 def docker(args, capture=False):
-    executable = shutil.which("docker")
+    # Docker Desktop may ship an extensionless CLI alongside docker.exe.
+    # Resolve the native Windows binary explicitly rather than a POSIX shim.
+    executable_name = "docker.exe" if sys.platform == "win32" else "docker"
+    executable = shutil.which(executable_name)
     if not executable:
         raise RuntimeError("Install and start Docker Desktop using Linux containers, then retry.")
-    return subprocess.run([executable, *args], cwd=ROOT, check=True, text=True,
-                          encoding="utf-8", capture_output=capture)
+    try:
+        return subprocess.run([executable, *args], cwd=ROOT, check=True, text=True,
+                              encoding="utf-8", errors="replace", capture_output=capture)
+    except OSError as exc:
+        code = getattr(exc, "winerror", None) or exc.errno
+        raise RuntimeError(f"Cannot start native Docker CLI (OS code {code}). Check Docker Desktop and the Docker executable in PATH; no credentials were printed.") from exc
 
 
 def check_local_engine():
@@ -112,6 +119,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nInterrupted. Use lab.py status to inspect your lab.")
         raise SystemExit(130)
-    except OSError:
-        print("Lab filesystem/process error. Check the local directory and Docker installation; credentials are not printed.", file=sys.stderr)
+    except OSError as exc:
+        code = getattr(exc, "winerror", None) or exc.errno
+        print(f"Lab filesystem/process error (OS code {code}). Check the local directory permissions; credentials are not printed.", file=sys.stderr)
         raise SystemExit(1)

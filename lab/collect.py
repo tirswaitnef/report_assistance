@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 import random
 import re
+import shutil
 import subprocess
 import sys
 from uuid import uuid4
@@ -56,6 +57,11 @@ def write_json(path, value):
 
 
 def run_command(command):
+    if command and command[0] == "docker":
+        executable = shutil.which("docker.exe" if sys.platform == "win32" else "docker")
+        if not executable:
+            raise CollectionError("Native Docker CLI not found; install/start Docker Desktop and check PATH.")
+        command = [executable, *command[1:]]
     try:
         result = subprocess.run(command, check=True, capture_output=True, text=True,
                                 encoding="utf-8", errors="strict", timeout=60)

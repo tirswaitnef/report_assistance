@@ -115,6 +115,8 @@ Lệnh này tắt lab và giữ dữ liệu volume để có thể khởi độn
 
 Nếu service chưa healthy, kiểm tra Docker Desktop, tài nguyên, dung lượng và lỗi tải image. Không tắt TLS verification để tải image. Nếu chỉ collector thất bại, giữ output lỗi, kiểm tra đúng project lab và trạng thái service. Nếu chỉ Gemini lỗi, làm theo hướng dẫn API hiện có; không sửa evidence hoặc đổi sang template rồi ghi nhận như kết quả Gemini.
 
+Trên Windows, Docker Desktop có thể cung cấp cả file `docker` không đuôi và `docker.exe`. Bản helper mới chọn rõ `docker.exe`, vì Python có thể chọn file không đuôi trong khi PowerShell gọi Docker thành công. Nếu bản cũ chỉ báo `Lab filesystem/process error`, cập nhật `lab.py` và `lab/collect.py` từ cùng phiên bản mã nguồn, giữ nguyên `.local` và `.venv`. Kiểm tra `docker version` có cả Client/Server rồi chạy lại `lab.py up`; chỉ thu dữ liệu sau thông báo `Lab ready`.
+
 Xem trạng thái lab tại thư mục dự án bằng `py -3.12 lab.py status`.
 
 Kết quả kiểm chứng phần mềm/lab trong môi trường phát triển được ghi tại [VALIDATION.md](../VALIDATION.md). Lần chạy trên máy bạn vẫn cần các service healthy và collector hoàn thành thành công; cấu hình Compose một mình không chứng minh bằng chứng đã được thu.

@@ -83,10 +83,21 @@ class LabObservationTests(unittest.TestCase):
         self.assertFalse(collector.check_expected_state("pg-b", "PostgreSQL", pg_observation(False))["passed"])
 
     def test_command_failure_never_echoes_process_stderr(self):
-        with patch.object(collector.subprocess, "run", side_effect=subprocess.CalledProcessError(1, ["docker"], stderr="private-password-value")):
+        with patch.object(collector.shutil, "which", return_value="/native/docker"), \
+             patch.object(collector.subprocess, "run", side_effect=subprocess.CalledProcessError(1, ["docker"], stderr="private-password-value")):
             with self.assertRaises(collector.CollectionError) as error:
                 collector.run_command(["docker", "compose", "ps"])
         self.assertNotIn("private-password-value", str(error.exception))
+
+    def test_windows_collector_uses_native_executable(self):
+        executable = r"C:\DockerDesktop\resources\bin\docker.exe"
+        with patch.object(collector.sys, "platform", "win32"), \
+             patch.object(collector.shutil, "which", return_value=executable) as which, \
+             patch.object(collector.subprocess, "run", return_value=type("Result", (), {"stdout": "observed\n"})()) as run:
+            observed = collector.run_command(["docker", "compose", "ps"])
+        which.assert_called_once_with("docker.exe")
+        self.assertEqual(run.call_args.args[0], [executable, "compose", "ps"])
+        self.assertEqual(observed, "observed")
 
 
 class LabCollectionTests(unittest.TestCase):

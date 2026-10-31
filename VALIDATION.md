@@ -4,6 +4,8 @@ These are **software checks**, not empirical answers to the three research quest
 
 ## Database research lab
 
+- Windows native-CLI fix: user diagnostics showed PowerShell Docker succeeds but Python's `shutil.which('docker')` selects an extensionless Docker Desktop file. Startup and collection now resolve `docker.exe` explicitly on Windows, preserve argument-array invocation and do not fall back to the extensionless file. Safe OS codes replace the generic process-launch error. **132 tests passed**, including Windows-resolution regression mocks; this workspace does not provide a native Windows runtime.
+
 - **129 tests passed** in the full suite after adding 24 lab lifecycle/collector tests. Docker and SQL unit-test calls are mocked; the live checks below are additional runtime evidence.
 - Pulled official PostgreSQL/MySQL images with registry TLS and checksum verification, then pinned the tested manifest digests in `lab/compose.yaml`. Actual observed versions were PostgreSQL **16.15** and MySQL **8.4.13** in this instance.
 - Started all four containers with the documented `lab.py up`; all reached healthy. Confirmed no host port bindings. The Compose network is internal and containers have no privileged/host-network/socket mounts.

@@ -31,6 +31,23 @@ class LabHelperTests(unittest.TestCase):
         self.env_file.parent.mkdir(parents=True, exist_ok=True)
         self.env_file.write_text("LAB_ROOT_PASSWORD=" + "a" * 32 + "\nLAB_DB_PASSWORD=" + "b" * 32 + "\n", encoding="utf-8")
 
+    def test_windows_uses_docker_exe_even_when_extensionless_shim_exists(self):
+        executable = r"C:\DockerDesktop\resources\bin\docker.exe"
+        with patch.object(lab.sys, "platform", "win32"), patch.object(lab.shutil, "which", return_value=executable) as which, \
+             patch.object(lab.subprocess, "run", return_value=SimpleNamespace(stdout="linux")) as run:
+            lab.docker(["info", "--format", "{{.OSType}}"], capture=True)
+        which.assert_called_once_with("docker.exe")
+        self.assertEqual(run.call_args.args[0][0], executable)
+        self.assertNotIn("shell", run.call_args.kwargs)
+
+    def test_process_launch_failure_exposes_only_safe_os_code(self):
+        failure = OSError(8, "private-command-or-credential")
+        with patch.object(lab.shutil, "which", return_value="/native/docker"), \
+             patch.object(lab.subprocess, "run", side_effect=failure):
+            with self.assertRaisesRegex(RuntimeError, "OS code 8") as error:
+                lab.docker(["info"], capture=True)
+        self.assertNotIn("private-command-or-credential", str(error.exception))
+
     def test_local_unix_and_windows_pipe_engines_are_accepted(self):
         for endpoint in ("unix:///var/run/docker.sock", "npipe:////./pipe/dockerDesktopLinuxEngine"):
             with self.subTest(endpoint=endpoint), patch.dict(os.environ, {}, clear=True), patch.object(lab, "docker") as docker:
