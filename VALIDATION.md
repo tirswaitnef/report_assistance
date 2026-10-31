@@ -2,6 +2,17 @@
 
 These are **software checks**, not empirical answers to the three research questions.
 
+## Database research lab
+
+- **129 tests passed** in the full suite after adding 24 lab lifecycle/collector tests. Docker and SQL unit-test calls are mocked; the live checks below are additional runtime evidence.
+- Pulled official PostgreSQL/MySQL images with registry TLS and checksum verification, then pinned the tested manifest digests in `lab/compose.yaml`. Actual observed versions were PostgreSQL **16.15** and MySQL **8.4.13** in this instance.
+- Started all four containers with the documented `lab.py up`; all reached healthy. Confirmed no host port bindings. The Compose network is internal and containers have no privileged/host-network/socket mounts.
+- Collected four live cases (12 assessment hypotheses) from the configured weak/control databases. All operational state checks passed, Pydantic accepted every case, and raw-file/case/source hashes were verified. Fixed scenario cluster IDs are retained across captures.
+- Functional local reads confirmed: PostgreSQL A permits app access without a password; B refuses passwordless access and accepts a read with certificate-verified lab TLS. MySQL A permits a plaintext read; B rejects plaintext with ERROR3159 and accepts an encrypted read. MySQL plaintext authentication probes used its supported RSA public-key exchange (`--get-server-public-key`) for caching_sha2 authentication; no credentials were logged. These are narrow lab behavior checks, not exploit or production-safety claims.
+- All four collected cases imported through the actual report API and generated template reports (HTTP201), without Gemini calls. Stopping and restarting the lab retained volumes, all four services became healthy again, and collection succeeded again. Only this lab's containers were stopped after validation; evidence and volumes were retained locally.
+- The three fixture rows per database are synthetic. Configuration evidence is actually observed at collection time; `reference-candidates.json` is a provisional lab reference, not independently adjudicated gold. Four cases from two scenario families are a pilot, not the planned research dataset. Collected outputs and local database credentials are excluded from GitHub source delivery.
+- User-facing reproduction and research guidance: `docs/LAB_RESEARCH_GUIDE.vi.md`. Docker Desktop/WSL2 on the user's Windows machine has not been tested from this workspace. The user's Gemini HTTP400 remains under separate diagnosis; collecting lab evidence does not require a model or API key.
+
 ## HTTP 400 compatibility update (0.2.1)
 
 - Added `scripts/probe_gemini.py` for isolated synthetic native requests: plain text, temperature, output budget, JSON MIME, minimal/full/inline schemas, system instruction and the combined application request. It makes no production fallback and does not mutate report settings. It stops on baseline/access/quota errors and can select a single probe. Candidate contents and credentials are not printed or saved. Live account-specific diagnosis still requires the user to run it with their own key.

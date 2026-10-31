@@ -4,6 +4,8 @@ Trợ lý sinh báo cáo kiểm thử bảo mật CSDL và đề xuất remediat
 
 **Tải ZIP về máy cá nhân:** xem [hướng dẫn cài đặt và sử dụng](HUONG_DAN_SU_DUNG.md). Sau khi cài Python 3.12, Windows chạy `py -3.12 run.py --configure-gemini`, macOS/Linux chạy `python3.12 run.py --configure-gemini` trong thư mục đã giải nén để nhập key Gemini tại terminal và mở server. Launcher tự tạo môi trường và cài dependencies ở lần đầu. Xem [hướng dẫn Gemini và thu thập dữ liệu nghiên cứu](docs/GEMINI_RESEARCH_GUIDE.vi.md).
 
+**Tạo đầu vào từ lab:** có thể tự thu bằng chứng từ PostgreSQL/MySQL có cấu hình yếu và cấu hình đối chứng, không cần dữ liệu CSDL cá nhân. Cài Docker Desktop dùng Linux containers, rồi chạy `py -3.12 lab.py up` và `py -3.12 lab.py collect --output outputs/lab-001`. Nhập các JSON trong `outputs/lab-001/cases/` vào web. Thu dữ liệu lab không gọi Gemini; xem [hướng dẫn lab và nghiên cứu](docs/LAB_RESEARCH_GUIDE.vi.md).
+
 ## Chạy ứng dụng
 
 Python 3.12; không cần Node, Docker hay CSDL đích. Dùng checkout hiện có `/workspace/report_assistance`.

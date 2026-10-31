@@ -1,0 +1,128 @@
+name: dbreport-lab
+
+x-postgres-environment: &postgres-environment
+  POSTGRES_DB: labdb
+  POSTGRES_USER: lab_admin
+  POSTGRES_PASSWORD: ${LAB_ROOT_PASSWORD:?Create the local lab environment before starting}
+  POSTGRES_APP_PASSWORD: ${LAB_DB_PASSWORD:?Create the local lab environment before starting}
+  POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+
+x-mysql-environment: &mysql-environment
+  MYSQL_DATABASE: labdb
+  MYSQL_USER: lab_app
+  MYSQL_PASSWORD: ${LAB_DB_PASSWORD:?Create the local lab environment before starting}
+  MYSQL_ROOT_PASSWORD: ${LAB_ROOT_PASSWORD:?Create the local lab environment before starting}
+
+x-postgres-health: &postgres-health
+  test: [CMD-SHELL, "pg_isready -h 127.0.0.1 -U lab_admin -d labdb"]
+  interval: 3s
+  timeout: 5s
+  retries: 40
+  start_period: 15s
+
+x-mysql-health: &mysql-health
+  test:
+    - CMD-SHELL
+    - >-
+      test "$$(MYSQL_PWD="$${MYSQL_ROOT_PASSWORD}" mysql
+      --protocol=TCP -h127.0.0.1 -uroot --batch --skip-column-names
+      -e 'SELECT COUNT(*) FROM labdb.lab_records')" = 3
+  interval: 5s
+  timeout: 10s
+  retries: 40
+  start_period: 40s
+
+services:
+  pg-a:
+    image: postgres:16-bookworm@sha256:e8a07d2c7579b038938cdba6c539e580e5001caf9ea203d397b5cc83e76bd938
+    environment: *postgres-environment
+    command:
+      - postgres
+      - -c
+      - hba_file=/opt/lab/pg_hba.conf
+      - -c
+      - ssl=off
+      - -c
+      - log_connections=off
+      - -c
+      - log_disconnections=off
+    volumes:
+      - pg-a-data:/var/lib/postgresql/data
+      - ./postgres/common.sql:/docker-entrypoint-initdb.d/10-fixtures.sql:ro
+      - ./postgres/a.sql:/docker-entrypoint-initdb.d/20-role.sql:ro
+      - ./postgres/pg-a-hba.conf:/opt/lab/pg_hba.conf:ro
+    networks: [lab-network]
+    healthcheck: *postgres-health
+    mem_limit: 256m
+    cpus: 0.75
+    security_opt: [no-new-privileges:true]
+
+  pg-b:
+    image: postgres:16-bookworm@sha256:e8a07d2c7579b038938cdba6c539e580e5001caf9ea203d397b5cc83e76bd938
+    environment: *postgres-environment
+    entrypoint: [bash, /opt/lab/start-postgres-b.sh]
+    command:
+      - postgres
+      - -c
+      - hba_file=/opt/lab/pg_hba.conf
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/tmp/lab-tls/server.crt
+      - -c
+      - ssl_key_file=/tmp/lab-tls/server.key
+      - -c
+      - password_encryption=scram-sha-256
+      - -c
+      - log_connections=on
+      - -c
+      - log_disconnections=on
+    volumes:
+      - pg-b-data:/var/lib/postgresql/data
+      - ./postgres/common.sql:/docker-entrypoint-initdb.d/10-fixtures.sql:ro
+      - ./postgres/b.sql:/docker-entrypoint-initdb.d/20-role.sql:ro
+      - ./postgres/pg-b-hba.conf:/opt/lab/pg_hba.conf:ro
+      - ./postgres/start-postgres-b.sh:/opt/lab/start-postgres-b.sh:ro
+    networks: [lab-network]
+    healthcheck: *postgres-health
+    mem_limit: 256m
+    cpus: 0.75
+    security_opt: [no-new-privileges:true]
+
+  mysql-a:
+    image: mysql:8.4@sha256:a0225d1ea6631c8bc2385dc4c2faba17bbf1834ecf369e1659a9a382bd8d5dd7
+    environment: *mysql-environment
+    command: [--require_secure_transport=OFF, --mysqlx=OFF]
+    volumes:
+      - mysql-a-data:/var/lib/mysql
+      - ./mysql/common.sql:/docker-entrypoint-initdb.d/10-fixtures.sql:ro
+      - ./mysql/a.sql:/docker-entrypoint-initdb.d/20-role.sql:ro
+    networks: [lab-network]
+    healthcheck: *mysql-health
+    mem_limit: 768m
+    cpus: 0.75
+    security_opt: [no-new-privileges:true]
+
+  mysql-b:
+    image: mysql:8.4@sha256:a0225d1ea6631c8bc2385dc4c2faba17bbf1834ecf369e1659a9a382bd8d5dd7
+    environment: *mysql-environment
+    command: [--require_secure_transport=ON, --mysqlx=OFF]
+    volumes:
+      - mysql-b-data:/var/lib/mysql
+      - ./mysql/common.sql:/docker-entrypoint-initdb.d/10-fixtures.sql:ro
+      - ./mysql/b.sql:/docker-entrypoint-initdb.d/20-role.sql:ro
+    networks: [lab-network]
+    healthcheck: *mysql-health
+    mem_limit: 768m
+    cpus: 0.75
+    security_opt: [no-new-privileges:true]
+
+networks:
+  lab-network:
+    internal: true
+
+volumes:
+  pg-a-data:
+  pg-b-data:
+  mysql-a-data:
+  mysql-b-data:

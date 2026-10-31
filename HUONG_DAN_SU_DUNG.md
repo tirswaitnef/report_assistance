@@ -2,9 +2,11 @@
 
 ## 1. Tải và giải nén
 
-Tải **report_assistance-gemini.zip** trong cuộc trò chuyện, chọn **Extract All / Giải nén tất cả**, rồi mở thư mục `report_assistance`. Thư mục đúng là nơi có file `run.py` cùng các thư mục `app`, `data`, `docs`.
+Tải ZIP từ [nhánh dự án trên GitHub](https://github.com/tirswaitnef/report_assistance/tree/gemini-research-assistant) bằng **Code → Download ZIP**, chọn **Extract All / Giải nén tất cả**. Thư mục đúng là nơi có file `run.py` cùng các thư mục `app`, `data`, `docs`.
 
 Nếu chỉ đọc đề cương, mở `docs/research-proposal.docx` bằng Word hoặc LibreOffice; không cần chạy ứng dụng.
+
+Nếu chưa có findings/bằng chứng của riêng mình, dùng [lab PostgreSQL/MySQL](docs/LAB_RESEARCH_GUIDE.vi.md) để thu dữ liệu đo từ CSDL đang chạy. Bước thu dữ liệu lab không cần Gemini key; kết quả nằm trong `outputs/<đợt-thu>/cases/` để nhập vào web.
 
 ## 2. Cài Python và lấy Gemini key
 
