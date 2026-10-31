@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.engine import generate_report, llm_configured, structural_metrics
+from app.engine import GenerationError, generate_report, llm_configured, structural_metrics
 from app.knowledge import KnowledgeBase
 from app.models import Case, ReportRequest
 from app.settings import public_settings
@@ -40,8 +40,9 @@ def run():
     tasks = [(name, case, repeat, g, r) for name, case in cases
              for repeat in range(args.repeats) for g in (False, True) for r in (False, True)]
     random.Random(args.seed).shuffle(tasks)
+    frozen_settings = public_settings() if args.provider == "llm" else None
     manifest = {"provider": args.provider, "seed": args.seed, "repeats": args.repeats,
-                "llm": public_settings() if args.provider == "llm" else None,
+                "llm": frozen_settings,
                 "interpretation": "software smoke baseline only" if args.provider == "template" else "LLM outputs awaiting independent expert assessment",
                 "case_hashes": {name: hashlib.sha256(case.model_dump_json().encode()).hexdigest() for name, case in cases},
                 "conditions": {"G": "evidence access plus citation/abstention instructions", "R": "OWASP BM25 context plus source-citation instructions"},
@@ -57,6 +58,10 @@ def run():
                    "grounding": grounding, "rag": rag, "provider": args.provider, "order": order}
             start = time.perf_counter()
             try:
+                if frozen_settings:
+                    current = public_settings()
+                    if tuple(current.get(k) for k in ("backend", "model", "schema_mode")) != tuple(frozen_settings.get(k) for k in ("backend", "model", "schema_mode")):
+                        raise GenerationError("Model or schema mode changed during this run; API call skipped.", code="configuration_changed")
                 report = generate_report(ReportRequest(case=case, grounding=grounding, rag=rag, provider=args.provider), kb)
                 row.update(status="completed", report_id=report["id"], structural=structural_metrics(report),
                            generation=report["provenance"].get("generation", {}))

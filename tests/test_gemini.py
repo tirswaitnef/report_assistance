@@ -12,7 +12,7 @@ from app.knowledge import KnowledgeBase
 from app.models import GeneratedOutput, ReportRequest
 from app.settings import DEFAULT_GEMINI_MODEL, get_settings, public_settings
 from tests.test_domain import sample_case
-from app.gemini_schema import gemini_response_schema
+from app.gemini_schema import gemini_response_schema, gemini_typed_response_schema
 
 
 class SettingsTests(unittest.TestCase):
@@ -118,10 +118,18 @@ class GeminiProviderTests(unittest.TestCase):
         self.assertEqual(request.kwargs["headers"]["x-goog-api-key"], "test-gemini-secret")
         body = request.kwargs["json"]
         self.assertEqual(body["generationConfig"]["responseMimeType"], "application/json")
-        self.assertEqual(body["generationConfig"]["responseJsonSchema"], gemini_response_schema())
+        self.assertEqual(body["generationConfig"]["responseSchema"], gemini_typed_response_schema())
+        self.assertNotIn("responseJsonSchema", body["generationConfig"])
         self.assertEqual(body["generationConfig"]["temperature"], 0)
         self.assertIn("systemInstruction", body)
         self.assertEqual(result.findings[0].id, "F001")
+
+    def test_explicit_json_schema_mode_remains_available(self):
+        with patch.dict(os.environ, {"GEMINI_SCHEMA_MODE": "json_schema"}):
+            _, request = self.invoke(httpx.Response(200, json=self.payload()))
+        config = request.kwargs["json"]["generationConfig"]
+        self.assertEqual(config["responseJsonSchema"], gemini_response_schema())
+        self.assertNotIn("responseSchema", config)
 
     def test_usage_resolved_model_and_wire_hash_are_available(self):
         result, _ = self.invoke(httpx.Response(200, json=self.payload()))

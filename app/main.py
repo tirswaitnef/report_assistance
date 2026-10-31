@@ -15,7 +15,7 @@ from app.models import Case, ReportRequest, StrictModel
 from app.settings import public_settings
 from app.experiments import ExperimentManager, ExperimentRequest, ExperimentBusy
 
-app = FastAPI(title="DB Security Report Assistant", version="0.1.0")
+app = FastAPI(title="DB Security Report Assistant", version="0.2.2")
 kb = KnowledgeBase()
 DATA_DIR = Path(os.getenv("DB_REPORT_DATA_DIR", str(ROOT / ".local")))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -64,6 +64,7 @@ def read_report(report_id: str) -> dict:
 def health():
     settings = public_settings()
     return {"status": "ok", "provider": "template", "llm_configured": llm_configured(),
+            "app_version": app.version, "llm_schema_mode": settings.get("schema_mode"),
             "llm_backend": settings["backend"], "llm_model": settings["model"],
             "credential_source": settings["credential_source"],
             "case_count": len(load_cases()), "corpus_chunks": len(kb.chunks),

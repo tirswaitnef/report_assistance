@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCAL_SETTINGS = ROOT / ".local" / "settings.json"
-LOCAL_NAMES = {"GEMINI_API_KEY", "GEMINI_MODEL", "AI_PROVIDER"}
+LOCAL_NAMES = {"GEMINI_API_KEY", "GEMINI_MODEL", "GEMINI_SCHEMA_MODE", "AI_PROVIDER"}
 DEFAULT_GEMINI_MODEL = "gemini-flash-latest"
 
 
@@ -19,6 +19,7 @@ class Settings:
     base_url: str = ""
     credential_source: str = "missing"
     error: str | None = None
+    schema_mode: str = "typed"
 
     @property
     def configured(self) -> bool:
@@ -50,20 +51,24 @@ def get_settings() -> Settings:
     key_name = "AI_API_KEY" if backend == "openai" else "GEMINI_API_KEY"
     api_key = value(key_name)
     model = value("AI_MODEL") if backend == "openai" else value("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
+    schema_mode = value("GEMINI_SCHEMA_MODE", "typed") if backend == "gemini" else "typed"
     if backend == "gemini":
         model = model.removeprefix("models/")
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,119}", model):
             error = "GEMINI_MODEL phải là model ID hợp lệ, không phải URL; kiểm tra model trong Google AI Studio."
+        if schema_mode not in {"typed", "json_schema"}:
+            error = "GEMINI_SCHEMA_MODE phải là typed hoặc json_schema."
     source = "environment" if key_name in os.environ and api_key else "local" if api_key else "missing"
     return Settings(backend=backend, model=model, api_key=api_key,
                     base_url=value("AI_BASE_URL", "https://api.openai.com/v1").rstrip("/") if backend == "openai" else "https://generativelanguage.googleapis.com/v1beta",
-                    credential_source=source, error=error)
+                    credential_source=source, error=error, schema_mode=schema_mode)
 
 
 def public_settings() -> dict:
     settings = get_settings()
     result = {"backend": settings.backend, "model": settings.model,
-              "configured": settings.configured, "credential_source": settings.credential_source}
+              "configured": settings.configured, "credential_source": settings.credential_source,
+              "schema_mode": settings.schema_mode if settings.schema_mode in {"typed", "json_schema"} else None}
     if settings.error:
         result["error"] = settings.error
     return result

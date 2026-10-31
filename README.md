@@ -23,6 +23,8 @@ python -m venv .venv
 
 ### Cấu hình Gemini
 
+Từ bản 0.2.2, mặc định dùng `GEMINI_SCHEMA_MODE=typed` để gửi schema inline qua `responseSchema`. Có thể chọn rõ `json_schema` để dùng `responseJsonSchema`; không có retry/chuyển mode tự động. Giữ mode cố định trong toàn bộ bốn điều kiện nghiên cứu. Đầu ra vẫn qua kiểm tra Pydantic và citation-ID như nhau; schema gửi API chỉ là ràng buộc sinh, không phải tiêu chí chấm ngữ nghĩa.
+
 Lấy key tại [Google AI Studio](https://aistudio.google.com/apikey), rồi cấu hình trên **máy cá nhân**:
 
 ```powershell

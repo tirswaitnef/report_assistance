@@ -144,7 +144,7 @@ class ExperimentManager:
                 start = time.perf_counter()
                 try:
                     now = public_settings()
-                    if request.provider == "llm" and (now["backend"], now["model"]) != (initial["backend"], initial["model"]):
+                    if request.provider == "llm" and tuple(now.get(k) for k in ("backend", "model", "schema_mode")) != tuple(initial.get(k) for k in ("backend", "model", "schema_mode")):
                         raise GenerationError("Cấu hình model thay đổi trong thực nghiệm; lượt này không được gọi API.")
                     with self.semaphore:
                         report = self.generator(ReportRequest(case=request.case, grounding=run["grounding"],

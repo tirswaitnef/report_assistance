@@ -2,6 +2,13 @@
 
 These are **software checks**, not empirical answers to the three research questions.
 
+## Typed Gemini output format (0.2.2)
+
+- The user reported HTTP200 for both `text_minimal` and `typed_report_schema` against `gemini-3.1-flash-lite`, while the older application continued returning HTTP400. These are user-run parameter-acceptance observations, not a live end-to-end report run from this workspace.
+- The application now defaults to the same inline native `responseSchema` structure as the accepted typed probe. `GEMINI_SCHEMA_MODE=json_schema` is an explicit alternative; there is no automatic retry, provider/model substitution or format fallback. Full local Pydantic and citation validation remain unchanged.
+- **143 tests passed** after integration, including equality between the production schema and successful probe shape, format-selection isolation, response validation and refusal to mix schema modes within an experiment. Wire format/profile, request hash and app version are recorded for reproducibility.
+- The `/api/health` response reports `app_version=0.2.2` and `llm_schema_mode`. Failed generation messages also identify the schema profile/version, allowing stale running processes to be distinguished from an updated application. Complete report generation with the user's account still requires a fresh application request after updating.
+
 ## Database research lab
 
 - Windows native-CLI fix: user diagnostics showed PowerShell Docker succeeds but Python's `shutil.which('docker')` selects an extensionless Docker Desktop file. Startup and collection now resolve `docker.exe` explicitly on Windows, preserve argument-array invocation and do not fall back to the extensionless file. Safe OS codes replace the generic process-launch error. **132 tests passed**, including Windows-resolution regression mocks; this workspace does not provide a native Windows runtime.

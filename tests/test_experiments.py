@@ -139,6 +139,17 @@ class ExperimentTests(unittest.TestCase):
         self.assertIsNone(manager.active_id)
         self.assertEqual(list(self.directory.iterdir()), [])
 
+    def test_schema_mode_change_does_not_mix_generation_formats_in_a_study(self):
+        original = {"backend": "gemini", "model": "test-model", "configured": True, "credential_source": "environment", "schema_mode": "typed"}
+        changed = {**original, "schema_mode": "json_schema"}
+        generator = Mock()
+        manager = ExperimentManager(self.directory, self.kb, generator=generator)
+        with patch("app.experiments.public_settings", side_effect=[original] + [changed] * 4):
+            state = manager.start(self.request(provider="llm"), background=False)
+        generator.assert_not_called()
+        self.assertEqual(state["failed"], 4)
+        self.assertEqual(state["succeeded"], 0)
+
     def test_active_job_blocks_duplicate_start_and_download_until_finished(self):
         entered, release = threading.Event(), threading.Event()
 

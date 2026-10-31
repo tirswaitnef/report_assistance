@@ -10,7 +10,7 @@ from app.knowledge import KnowledgeBase
 from app.models import GeneratedOutput, ReportRequest
 from app.privacy import redact_value
 from app.settings import get_settings
-from app.gemini_schema import gemini_response_schema, SCHEMA_PROFILE
+from app.gemini_schema import gemini_format, gemini_schema_profile
 from app.gemini_diagnostics import gemini_error_hint
 
 
@@ -199,7 +199,7 @@ def call_llm(context: dict) -> GeneratedOutput:
             "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
             "contents": [{"role": "user", "parts": [{"text": json.dumps({"context": context}, ensure_ascii=False)}]}],
             "generationConfig": {"temperature": 0, "maxOutputTokens": maximum_tokens,
-                                 "responseMimeType": "application/json", "responseJsonSchema": gemini_response_schema()},
+                                 **gemini_format(settings.schema_mode)},
         }
         headers = {"x-goog-api-key": settings.api_key, "Content-Type": "application/json"}
     else:
@@ -219,7 +219,14 @@ def call_llm(context: dict) -> GeneratedOutput:
         with httpx.Client(timeout=httpx.Timeout(120, connect=15), follow_redirects=False) as client:
             response = client.post(endpoint, json=body, headers=headers)
         if response.status_code != 200:
-            raise provider_response_error(response, settings.backend)
+            error = provider_response_error(response, settings.backend)
+            if settings.backend == "gemini":
+                profile = gemini_schema_profile(settings.schema_mode)
+                diagnostic = {**(error.diagnostic or {}), "model": settings.model, "schema_profile": profile,
+                              "app_version": "0.2.2"}
+                raise GenerationError(f"{error} [app 0.2.2; schema {profile}]", code=error.code,
+                                      provider_status=error.provider_status, diagnostic=diagnostic)
+            raise error
         if len(response.content) > 2_000_000:
             raise GenerationError("Phản hồi model vượt giới hạn kích thước; chưa lưu báo cáo.", code="response_too_large")
         payload = response.json()
@@ -229,7 +236,8 @@ def call_llm(context: dict) -> GeneratedOutput:
                     "temperature": 0, "max_output_tokens": maximum_tokens,
                     "request_sha256": _hash_json(body),
                     "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
-                    "schema_profile": SCHEMA_PROFILE if settings.backend == "gemini" else "pydantic-full",
+                    "schema_profile": gemini_schema_profile(settings.schema_mode) if settings.backend == "gemini" else "pydantic-full",
+                    "schema_mode": settings.schema_mode if settings.backend == "gemini" else None,
                     "elapsed_seconds": round(time.perf_counter() - started, 4)}
         if settings.backend == "gemini":
             if payload.get("promptFeedback", {}).get("blockReason"):
@@ -309,7 +317,7 @@ def generate_report(request: ReportRequest, kb: KnowledgeBase) -> dict:
               "summary": {"total": len(results), "confirmed": cited_findings,
                           "needs_review": len(results) - cited_findings, "severities": severities},
               "findings": results, "warnings": warnings,
-              "provenance": {"generator_version": "0.2.1", "model": output._generation_metadata.get("model_requested", get_settings().model) if request.provider == "llm" else "deterministic-template-v1",
+              "provenance": {"generator_version": "0.2.2", "model": output._generation_metadata.get("model_requested", get_settings().model) if request.provider == "llm" else "deterministic-template-v1",
                              "llm_backend": output._generation_metadata.get("backend", get_settings().backend) if request.provider == "llm" else None,
                              "generation": output._generation_metadata if request.provider == "llm" else {},
                              "temperature": 0 if request.provider == "llm" else None,

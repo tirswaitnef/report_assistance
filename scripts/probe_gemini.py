@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT))
 import httpx
 
 from app.engine import SYSTEM_PROMPT
-from app.gemini_schema import gemini_response_schema
+from app.gemini_schema import gemini_response_schema, gemini_format
 from app.privacy import redact
 from app.settings import get_settings
 
@@ -49,7 +49,7 @@ def typed_schema(schema):
     return result
 
 
-def build_probes():
+def build_probes(schema_mode="typed"):
     def body(text, config=None, system=None):
         value = {"contents": [{"role": "user", "parts": [{"text": text}]}]}
         if config is not None:
@@ -77,7 +77,7 @@ def build_probes():
         {"name": "typed_report_schema", "conditional": True, "body": body(report_text, {**mime, "responseSchema": typed_schema(inline_schema(schema))})},
         {"name": "system_instruction", "body": body(text, system=SYSTEM_PROMPT)},
         {"name": "application_request", "body": body(json.dumps({"context": context}, ensure_ascii=False),
-            {**mime, "temperature": 0, "maxOutputTokens": 8192, "responseJsonSchema": schema}, SYSTEM_PROMPT)},
+            {"temperature": 0, "maxOutputTokens": 8192, **gemini_format(schema_mode)}, SYSTEM_PROMPT)},
     ]
 
 
@@ -98,15 +98,16 @@ def safe_error(response, key):
 
 
 def run(only=None):
-    probes = build_probes()
-    if only and only not in {probe["name"] for probe in probes}:
+    if only and only not in {probe["name"] for probe in build_probes()}:
         print("Unknown probe name. Use --help for choices.", flush=True)
         return 2
     settings = get_settings()
     if settings.backend != "gemini" or not settings.configured:
         print("Gemini is not configured. Run: py -3.12 run.py --configure-gemini", flush=True)
         return 2
+    probes = build_probes(settings.schema_mode)
     print("GEMINI DIRECT PROBE v1 | model:", settings.model, flush=True)
+    print("Application schema mode:", settings.schema_mode, flush=True)
     print("Synthetic prompts only; no findings, evidence or keys are printed.", flush=True)
     print("API calls can consume quota. Maximum calls:", 1 if only else 10, flush=True)
     results = []
@@ -145,6 +146,7 @@ def run(only=None):
         folder = ROOT / ".local" / "diagnostics"
         folder.mkdir(parents=True, exist_ok=True)
         report = {"version": "direct-probe-v1", "model": settings.model,
+                  "schema_mode": settings.schema_mode,
                   "created_at": datetime.now(timezone.utc).isoformat(), "results": results,
                   "interpretation": "HTTP200 means parameter acceptance only, not report correctness; no research scores."}
         path = folder / f"probe-{uuid4().hex[:12]}.json"
