@@ -4,6 +4,8 @@ These are **software checks**, not empirical answers to the three research quest
 
 ## HTTP 400 compatibility update (0.2.1)
 
+- Added `scripts/probe_gemini.py` for isolated synthetic native requests: plain text, temperature, output budget, JSON MIME, minimal/full/inline schemas, system instruction and the combined application request. It makes no production fallback and does not mutate report settings. It stops on baseline/access/quota errors and can select a single probe. Candidate contents and credentials are not printed or saved. Live account-specific diagnosis still requires the user to run it with their own key.
+
 - **97 tests passed** after this update (mocked Gemini; no live key).
 
 - Google documents a subset for `responseJsonSchema`; the wire schema now omits unsupported `minLength`, `maxLength` and `default` hints while preserving the full Pydantic schema for local validation. Structured JSON output and citation guards remain enabled. Source: [official SDK schema field documentation](https://github.com/googleapis/python-genai/blob/main/google/genai/types.py).
